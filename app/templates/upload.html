@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnCorp - File Upload</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="brand-icon">🏢</span>
+                <span class="brand-text">VulnCorp</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('nettools') }}" class="nav-item">
+                    <span class="nav-icon">🌐</span> Network Tools
+                </a>
+                <a href="{{ url_for('upload') }}" class="nav-item active">
+                    <span class="nav-icon">📁</span> File Upload
+                </a>
+                <a href="{{ url_for('viewer') }}" class="nav-item">
+                    <span class="nav-icon">📄</span> File Viewer
+                </a>
+                <a href="{{ url_for('notes') }}" class="nav-item">
+                    <span class="nav-icon">📝</span> Notes
+                </a>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_panel') }}" class="nav-item nav-admin">
+                    <span class="nav-icon">⚙️</span> Admin Panel
+                </a>
+                {% endif %}
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-avatar">👤</span>
+                    <div>
+                        <p class="user-name">{{ session.get('user', 'Guest') }}</p>
+                        <p class="user-role">{{ session.get('role', 'unknown') }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">Logout</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="content-header">
+                <h1>📁 File Upload</h1>
+                <p>Upload documents and resources to the server</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="card card-full">
+                <h3>Upload a File</h3>
+                <p class="text-muted">Select a file to upload to the server. Supported: documents, images, archives.</p>
+
+                {% if message %}
+                <div class="flash flash-success">{{ message }}</div>
+                {% endif %}
+
+                <!-- VULNERABLE: No file type restriction -->
+                <!-- Upload a reverse shell script, webshell, etc. -->
+                <!-- Access via /uploads/filename or /cgi/filename -->
+                <form method="POST" enctype="multipart/form-data" class="upload-form">
+                    <div class="upload-zone" id="dropZone">
+                        <div class="upload-icon">📤</div>
+                        <p>Drag & drop a file here or click to browse</p>
+                        <input type="file" id="file" name="file" class="file-input">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload File</button>
+                </form>
+            </div>
+
+            {% if files %}
+            <div class="card card-full">
+                <h3>📂 Uploaded Files</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for f in files %}
+                        <tr>
+                            <td><code>{{ f }}</code></td>
+                            <td>
+                                <a href="{{ url_for('uploaded_file', filename=f) }}" class="btn btn-sm btn-outline">View</a>
+                                <a href="{{ url_for('cgi_exec', script=f) }}" class="btn btn-sm btn-danger">Execute</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <script>
+        // Drag and drop enhancement
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('file');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-active'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            fileInput.files = e.dataTransfer.files;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnCorp - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="brand-icon">🏢</span>
+                <span class="brand-text">VulnCorp</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item active">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('nettools') }}" class="nav-item">
+                    <span class="nav-icon">🌐</span> Network Tools
+                </a>
+                <a href="{{ url_for('upload') }}" class="nav-item">
+                    <span class="nav-icon">📁</span> File Upload
+                </a>
+                <a href="{{ url_for('viewer') }}" class="nav-item">
+                    <span class="nav-icon">📄</span> File Viewer
+                </a>
+                <a href="{{ url_for('notes') }}" class="nav-item">
+                    <span class="nav-icon">📝</span> Notes
+                </a>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_panel') }}" class="nav-item nav-admin">
+                    <span class="nav-icon">⚙️</span> Admin Panel
+                </a>
+                {% endif %}
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-avatar">👤</span>
+                    <div>
+                        <p class="user-name">{{ session.get('user', 'Guest') }}</p>
+                        <p class="user-role">{{ session.get('role', 'unknown') }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Dashboard</h1>
+                <p>Welcome back, <strong>{{ session.get('user', 'Guest') }}</strong></p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="dashboard-grid">
+                <div class="card card-stat">
+                    <div class="card-icon">🌐</div>
+                    <div class="card-body">
+                        <h3>Network Tools</h3>
+                        <p>Run diagnostics on network hosts</p>
+                        <a href="{{ url_for('nettools') }}" class="btn btn-sm btn-primary">Open</a>
+                    </div>
+                </div>
+
+                <div class="card card-stat">
+                    <div class="card-icon">📁</div>
+                    <div class="card-body">
+                        <h3>File Upload</h3>
+                        <p>Upload files to the server</p>
+                        <a href="{{ url_for('upload') }}" class="btn btn-sm btn-primary">Open</a>
+                    </div>
+                </div>
+
+                <div class="card card-stat">
+                    <div class="card-icon">📄</div>
+                    <div class="card-body">
+                        <h3>File Viewer</h3>
+                        <p>View documents on the server</p>
+                        <a href="{{ url_for('viewer') }}" class="btn btn-sm btn-primary">Open</a>
+                    </div>
+                </div>
+
+                <div class="card card-stat">
+                    <div class="card-icon">📝</div>
+                    <div class="card-body">
+                        <h3>Notes</h3>
+                        <p>Team collaboration notes</p>
+                        <a href="{{ url_for('notes') }}" class="btn btn-sm btn-primary">Open</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information Panel -->
+            <div class="card card-full">
+                <h3>📋 System Notices</h3>
+                <div class="notice-list">
+                    <div class="notice notice-info">
+                        <strong>Maintenance Window:</strong> Server backup runs nightly at 2:00 AM via 
+                        <code>/opt/scripts/cleanup.sh</code>
+                    </div>
+                    <div class="notice notice-warning">
+                        <strong>Security Reminder:</strong> Do not share internal credentials. 
+                        See admin panel for managed credentials.
+                    </div>
+                    <div class="notice notice-info">
+                        <strong>New Server:</strong> Production DB server (192.168.56.102) is now online. 
+                        Credentials stored in admin panel.
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

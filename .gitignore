@@ -1,0 +1,22 @@
+# Ignore runtime files
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite3
+uploads/*
+!uploads/.gitkeep
+.env
+
+# ngrok (sensitive)
+.ngrok_token
+.ngrok_pid
+.tunnel_urls
+ngrok-vulncorp.yml
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db

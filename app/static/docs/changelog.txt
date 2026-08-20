@@ -1,0 +1,25 @@
+VulnCorp Portal - Changelog
+===========================
+
+v3.2.1 (2024-08-15)
+  - Added network diagnostics tool
+  - Fixed file upload size limit (removed — pending re-implementation)
+  - Added admin credential management panel
+
+v3.1.0 (2024-06-01)
+  - New notes collaboration feature
+  - Added file viewer for internal docs
+  - Known issue: file viewer path validation needs improvement
+
+v3.0.0 (2024-01-15)
+  - Complete portal redesign
+  - Migrated to Flask backend
+  - Note: legacy SQL queries still used in login — migration to ORM pending
+
+v2.5.0 (2023-09-01)
+  - Added FTP service on port 21 for file distribution
+  - SSH access enabled for remote maintenance (port 22)
+  - Internal credential storage added to database
+
+v2.0.0 (2023-03-01)
+  - Initial release of internal portal

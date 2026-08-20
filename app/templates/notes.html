@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnCorp - Notes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="brand-icon">🏢</span>
+                <span class="brand-text">VulnCorp</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('nettools') }}" class="nav-item">
+                    <span class="nav-icon">🌐</span> Network Tools
+                </a>
+                <a href="{{ url_for('upload') }}" class="nav-item">
+                    <span class="nav-icon">📁</span> File Upload
+                </a>
+                <a href="{{ url_for('viewer') }}" class="nav-item">
+                    <span class="nav-icon">📄</span> File Viewer
+                </a>
+                <a href="{{ url_for('notes') }}" class="nav-item active">
+                    <span class="nav-icon">📝</span> Notes
+                </a>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_panel') }}" class="nav-item nav-admin">
+                    <span class="nav-icon">⚙️</span> Admin Panel
+                </a>
+                {% endif %}
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-avatar">👤</span>
+                    <div>
+                        <p class="user-name">{{ session.get('user', 'Guest') }}</p>
+                        <p class="user-role">{{ session.get('role', 'unknown') }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">Logout</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="content-header">
+                <h1>📝 Team Notes</h1>
+                <p>Shared notes and collaboration space</p>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-container">
+                {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="card card-full">
+                <h3>Add a Note</h3>
+                <!-- VULNERABLE: Stored XSS — content rendered without escaping -->
+                <!-- Try: <script>alert('XSS')</script> -->
+                <!-- Try: <img src=x onerror="fetch('/admin').then(r=>r.text()).then(t=>document.write(t))"> -->
+                <form method="POST" class="tool-form">
+                    <div class="form-group">
+                        <label for="content">Note Content</label>
+                        <textarea id="content" name="content" rows="4" 
+                                  placeholder="Write your note here..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Note</button>
+                </form>
+            </div>
+
+            <div class="card card-full">
+                <h3>📋 All Notes</h3>
+                {% if notes %}
+                <div class="notes-list">
+                    {% for note in notes %}
+                    <div class="note-card">
+                        <div class="note-header">
+                            <span class="note-author">👤 {{ note.author }}</span>
+                            <span class="note-date">{{ note.created }}</span>
+                        </div>
+                        <!-- VULNERABLE: Rendering raw HTML (Stored XSS) -->
+                        <div class="note-content">{{ note.content | safe }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No notes yet. Be the first to add one!</p>
+                {% endif %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

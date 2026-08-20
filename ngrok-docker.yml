@@ -1,0 +1,16 @@
+# ================================================================
+# ngrok configuration for Docker sidecar mode
+# ================================================================
+# Used when running ngrok as a container alongside VulnCorp.
+# Activate with: NGROK_AUTHTOKEN=xxx docker compose --profile tunnel up -d
+# ================================================================
+
+version: 2
+tunnels:
+  vulncorp-web:
+    proto: http
+    addr: vulncorp:80
+    inspect: false
+  vulncorp-ftp:
+    proto: tcp
+    addr: vulncorp:21

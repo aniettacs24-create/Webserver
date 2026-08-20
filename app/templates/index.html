@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnCorp - Internal Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="landing-page">
+        <div class="particle-bg"></div>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <span class="brand-icon">🏢</span>
+                <span class="brand-text">VulnCorp</span>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
+            </div>
+        </nav>
+
+        <main class="hero">
+            <div class="hero-content">
+                <h1 class="glitch-text" data-text="VulnCorp Internal Portal">VulnCorp Internal Portal</h1>
+                <p class="hero-subtitle">Enterprise Resource Management System v3.2.1</p>
+                <p class="hero-desc">Authorized personnel only. All access is monitored and logged.</p>
+                <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">
+                    <span>Access Portal</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="hero-visual">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                        <span class="terminal-title">system-status</span>
+                    </div>
+                    <div class="terminal-body">
+                        <p><span class="prompt">$</span> systemctl status vulncorp-portal</p>
+                        <p class="text-green">● vulncorp-portal.service - VulnCorp Web Portal</p>
+                        <p>&nbsp;&nbsp;Loaded: loaded (/etc/systemd/system/vulncorp.service)</p>
+                        <p>&nbsp;&nbsp;Active: <span class="text-green">active (running)</span></p>
+                        <p>&nbsp;&nbsp;PID: 1337</p>
+                        <p><span class="prompt">$</span> <span class="cursor-blink">_</span></p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <footer class="footer">
+            <p>&copy; 2024 VulnCorp Industries. Internal use only.</p>
+            <p class="footer-small">Portal v3.2.1 | Build 20240815 | Flask/Python</p>
+        </footer>
+    </div>
+</body>
+</html>

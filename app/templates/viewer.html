@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnCorp - File Viewer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="brand-icon">🏢</span>
+                <span class="brand-text">VulnCorp</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard') }}" class="nav-item">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="{{ url_for('nettools') }}" class="nav-item">
+                    <span class="nav-icon">🌐</span> Network Tools
+                </a>
+                <a href="{{ url_for('upload') }}" class="nav-item">
+                    <span class="nav-icon">📁</span> File Upload
+                </a>
+                <a href="{{ url_for('viewer') }}" class="nav-item active">
+                    <span class="nav-icon">📄</span> File Viewer
+                </a>
+                <a href="{{ url_for('notes') }}" class="nav-item">
+                    <span class="nav-icon">📝</span> Notes
+                </a>
+                {% if session.get('role') == 'admin' %}
+                <a href="{{ url_for('admin_panel') }}" class="nav-item nav-admin">
+                    <span class="nav-icon">⚙️</span> Admin Panel
+                </a>
+                {% endif %}
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <span class="user-avatar">👤</span>
+                    <div>
+                        <p class="user-name">{{ session.get('user', 'Guest') }}</p>
+                        <p class="user-role">{{ session.get('role', 'unknown') }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline btn-sm">Logout</a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="content-header">
+                <h1>📄 File Viewer</h1>
+                <p>View documents stored on the server</p>
+            </header>
+
+            <div class="card card-full">
+                <h3>View Document</h3>
+                <p class="text-muted">Enter the filename to view from the docs directory.</p>
+
+                <!-- VULNERABLE: Directory traversal via file parameter -->
+                <!-- Try: ?file=../../../etc/passwd -->
+                <!-- Try: ?file=../../../etc/shadow -->
+                <!-- Try: ?file=../../../opt/vulncorp/db/vulncorp.db -->
+                <!-- Try: ?file=../../../root/.ssh/id_rsa -->
+                <form method="GET" class="tool-form">
+                    <div class="form-group">
+                        <label for="file">Filename</label>
+                        <div class="input-group">
+                            <span class="input-prefix">/docs/</span>
+                            <input type="text" id="file" name="file" 
+                                   placeholder="e.g. readme.txt" 
+                                   value="{{ filename }}" autocomplete="off">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">View File</button>
+                </form>
+
+                {% if content %}
+                <div class="output-panel">
+                    <div class="output-header">
+                        <span class="dot green"></span>
+                        <span>{{ filename }}</span>
+                    </div>
+                    <pre class="output-body">{{ content }}</pre>
+                </div>
+                {% endif %}
+
+                <div class="file-hints">
+                    <h4>Available Documents:</h4>
+                    <ul>
+                        <li><a href="?file=readme.txt">readme.txt</a></li>
+                        <li><a href="?file=changelog.txt">changelog.txt</a></li>
+                        <li><a href="?file=todo.txt">todo.txt</a></li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

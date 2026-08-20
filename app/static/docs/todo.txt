@@ -1,0 +1,27 @@
+VulnCorp Portal - TODO
+======================
+
+HIGH PRIORITY:
+  [ ] Fix SQL injection in login form (use parameterized queries!)
+  [ ] Add file type validation to upload endpoint
+  [ ] Sanitize user input on network tools page
+  [ ] Remove debug mode in production
+  [ ] Change default secret key
+
+MEDIUM PRIORITY:
+  [ ] Implement CSRF tokens
+  [ ] Add rate limiting to login endpoint
+  [ ] Review /etc/cron.d/ scripts — cleanup.sh is world-writable
+  [ ] Rotate credentials for 192.168.56.102 services
+  [ ] Remove server-status endpoint
+
+LOW PRIORITY:
+  [ ] Upgrade Flask version
+  [ ] Add logging
+  [ ] Set up HTTPS
+  [ ] Restrict /viewer to specific directories
+
+NOTES:
+  - Backup user has sudo access to /usr/bin/find — is this necessary?
+  - The SUID binary /usr/local/bin/vuln-backup needs audit
+  - FTP anonymous access should be disabled after file migration
