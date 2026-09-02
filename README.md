@@ -327,7 +327,7 @@ docker compose down --rmi all --volumes
 
 ---
 
-## 📋 Vulnerability Summary
+## 📋 Vulnerability Summary (Machine 1)
 
 | # | Vulnerability | Location | Impact |
 |---|--------------|----------|--------|
@@ -347,3 +347,87 @@ docker compose down --rmi all --volumes
 | 14 | Anonymous FTP | Port 21 | Network map disclosure |
 | 15 | SSH Root Login | Port 22 | Direct root access if creds found |
 | 16 | Credential Files | Multiple locations | Lateral movement to Machine 2 |
+
+---
+
+## 🛡️ Enterprise Vulnerability, CVE & Scanner Detection Matrix (All 11 Machines)
+
+All vulnerabilities across the VulnCorp enterprise testbed map to standard **CVEs**, **CWEs**, and **CIS benchmarks**, and are detectable by industry-standard vulnerability scanners like **Tenable Nessus** and **OpenVAS / Greenbone**.
+
+| # | Machine | Vulnerability | CVE / Identifier | Nessus Plugin Detection | OpenVAS NVT Detection | Severity |
+|---|---------|---------------|------------------|-------------------------|-----------------------|----------|
+| **1** | **dmz-web01** | SQL Injection (`/login`) | **CWE-89** | ✅ Nessus WAS / Web Scan | ✅ OpenVAS Web / ZAP | **Critical (9.8)** |
+| | | Command Injection (`/nettools`) | **CWE-78** | ✅ CGI generic injection plugin | ✅ NVT `command_exec` | **Critical (9.8)** |
+| | | Arbitrary File Upload | **CWE-434** | ✅ Web Application plugin | ✅ OpenVAS Web upload | **High (8.8)** |
+| | | Directory Traversal (`/viewer`) | **CWE-22** | ✅ Plugin 11411 (`dir_traversal`) | ✅ NVT `path_traversal` | **High (7.5)** |
+| | | World-readable `/etc/shadow` | **CIS Linux** | ✅ Plugin 10267 (Credentialed) | ✅ OpenVAS Local Check | **High (7.8)** |
+| **2** | **dmz-mail01** | Postfix SMTP Open Relay | **CVE-1999-0512** | ✅ Plugin 10262 (`SMTP Open Relay`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.100085` | **High (7.5)** |
+| | | Dovecot Plaintext Auth (No TLS) | **CWE-319** | ✅ Plugin 10079 (`Cleartext Auth`) | ✅ NVT `imap_cleartext_auth` | **Medium (5.3)** |
+| | | SMTP `VRFY` User Enumeration | **CVE-1999-0531** | ✅ Plugin 10264 (`SMTP VRFY Enabled`) | ✅ NVT `smtp_vrfy_user_enum` | **Info** |
+| **3** | **dmz-ftp01** | ProFTPD `mod_copy` RCE | **CVE-2015-3306** | ✅ Plugin 83073 (`ProFTPD mod_copy`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.105260` | **Critical (9.8)** |
+| | | vsftpd Anonymous Upload/Write | **CWE-276** | ✅ Plugin 10079 (`FTP Anon Write`) | ✅ NVT `ftp_anonymous_write` | **High (7.5)** |
+| | | Sensitive files in `/pub` share | **CWE-200** | ✅ Plugin 11412 (`FTP World-Readable`) | ✅ NVT `ftp_sensitive_files` | **Medium (5.3)** |
+| **4** | **rz-db01** | MySQL Default Credentials (`root:toor`)| **CVE-1999-0502** | ✅ Plugin 10452 (`MySQL Default Creds`)| ✅ NVT `1.3.6.1.4.1.25623.1.0.100185` | **Critical (9.8)** |
+| | | PostgreSQL `COPY PROGRAM` RCE | **CVE-2019-9193** | ✅ Plugin 124318 (`PostgreSQL RCE`) | ✅ NVT `postgresql_copy_rce` | **Critical (9.8)** |
+| | | Redis Unauthenticated Remote Access | **CVE-2015-8080** | ✅ Plugin 84524 (`Redis Unprotected`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.105436` | **Critical (9.8)** |
+| **5** | **rz-vpn01** | VPN Web Admin Default Creds | **CWE-798** | ✅ Plugin 10455 (`Default Web Creds`) | ✅ NVT `web_default_credentials` | **High (8.8)** |
+| | | Path Traversal in `/download/` | **CWE-22** | ✅ Web Application Scan | ✅ NVT `http_path_traversal` | **High (7.5)** |
+| **6** | **rz-monitor01**| Nagios Default Creds (`nagiosadmin`) | **CWE-255** | ✅ Plugin 50686 (`Nagios Default Login`)| ✅ NVT `nagios_default_login` | **High (8.8)** |
+| | | SNMP Public Community String | **CVE-1999-0517** | ✅ Plugin 41028 (`SNMP Default Public`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.10264` | **High (7.5)** |
+| **7** | **int-dc01** | AS-REP Roasting (`svc_backup`) | **Kerberos PreAuth** | ✅ Nessus AD Plugin 153834 | ✅ PingCastle / OpenVAS AD Plugin | **High (7.5)** |
+| | | Kerberoasting (`svc_erp`, `svc_sql`) | **SPN Weak Crypto** | ✅ Plugin 153835 (`AD Kerberoasting`) | ✅ OpenVAS AD Audit | **High (7.5)** |
+| | | GPP `cPassword` in SYSVOL | **CVE-2014-1812** | ✅ Plugin 74249 (`GPP cPassword MS14-025`)| ✅ NVT `1.3.6.1.4.1.25623.1.0.804473` | **High (8.5)** |
+| | | SMB Signing Disabled (NTLM Relay) | **CVE-2008-4037** | ✅ Plugin 57608 (`SMB Signing Disabled`)| ✅ NVT `1.3.6.1.4.1.25623.1.0.103000` | **Medium (5.3)** |
+| | | PrintNightmare (Print Spooler) | **CVE-2021-34527** | ✅ Plugin 151214 (`PrintNightmare RCE`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.818134` | **Critical (9.8)** |
+| | | RDP without NLA | **CWE-306** | ✅ Plugin 58453 (`RDP NLA Not Required`)| ✅ NVT `1.3.6.1.4.1.25623.1.0.103444` | **Medium (5.3)** |
+| **8** | **int-erp01** | SQL Injection & IDOR | **CWE-89** / **CWE-639** | ✅ Web Application Scan | ✅ OpenVAS Web / ZAP | **Critical (9.8)** |
+| | | SSRF via Document Importer | **CWE-918** | ✅ Web Application Scan | ✅ OpenVAS Web / ZAP | **High (8.6)** |
+| **9** | **int-dev01** | GitLab Unauthenticated RCE | **CVE-2021-22205** | ✅ Plugin 154774 (`GitLab RCE 22205`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.147055` | **Critical (10.0)** |
+| | | Docker Daemon API Unauthenticated | **CWE-306** | ✅ Plugin 100109 (`Docker Remote API`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.108422` | **Critical (9.8)** |
+| | | Jenkins Script Console Unauthenticated| **CWE-306** | ✅ Plugin 84555 (`Jenkins CLI/Script`) | ✅ NVT `jenkins_script_console` | **Critical (9.8)** |
+| **10** | **int-files01**| Samba SMBv1 Enabled (EternalBlue)| **CVE-2017-0144** | ✅ Plugin 97833 (`SMBv1 Protocol Active`)| ✅ NVT `1.3.6.1.4.1.25623.1.0.108118` | **Critical (9.8)** |
+| | | NFS `no_root_squash` | **CVE-1999-0554** | ✅ Plugin 11356 (`NFS Export Root Squash`)| ✅ NVT `1.3.6.1.4.1.25623.1.0.100114` | **High (7.5)** |
+| | | Samba Guest / Null Session Share | **CVE-1999-0519** | ✅ Plugin 26920 (`Samba Null Session`) | ✅ NVT `1.3.6.1.4.1.25623.1.0.10334` | **High (7.5)** |
+| **11** | **int-backup01**| rsync Daemon Unauthenticated Dump| **CVE-1999-0504** | ✅ Plugin 10761 (`rsync Daemon No Pass`)| ✅ NVT `1.3.6.1.4.1.25623.1.0.100062` | **High (7.5)** |
+| | | Writable Cron Job (Local Privesc) | **CWE-732** | ✅ Plugin 10267 (Credentialed) | ✅ OpenVAS Local Security Checks | **High (7.8)** |
+
+---
+
+## 🧗‍♂️ Privilege Escalation Vectors Overview
+
+### Linux Privilege Escalation Matrix
+- **SUID PATH Hijack:** `/usr/local/bin/vuln-backup` executes `tar` relative to PATH.
+- **World-Writable Cron Jobs:** `/opt/scripts/cleanup.sh` and `/opt/backup/run.sh` executed by root every minute.
+- **Sudo Misconfigurations (GTFOBins):** `sudo /usr/bin/find` and `sudo /usr/bin/vim` allowed without password.
+- **World-Readable Passwords:** `/etc/shadow` set to permission `644`.
+- **Docker API Escape:** TCP socket `:2375` allows root host filesystem mounting (`docker run -v /:/host alpine chroot /host`).
+- **NFS `no_root_squash`:** Remote client root can write SUID binaries to exports.
+
+### Windows Active Directory Privilege Escalation Matrix
+- **AS-REP Roasting:** `svc_backup` has `DoesNotRequirePreAuth` enabled.
+- **Kerberoasting:** `svc_erp` (HTTP) and `svc_sql` (MSSQL) have registered SPNs.
+- **DCSync Rights:** `svc_backup` possesses `GenericAll` rights to synchronize domain secrets via `secretsdump.py`.
+- **GPP cPassword:** `SYSVOL` contains decrypted password for local administrator backdoor.
+- **PrintNightmare (CVE-2021-34527):** Unpatched Print Spooler enables instant SYSTEM escalation.
+
+---
+
+## 🔀 Lateral Movement & Full Attack Path
+
+```
+DMZ (10.10.10.0/24)               Restricted Zone (172.16.0.0/24)        Internal Zone (192.168.1.0/24)
+───────────────────               ───────────────────────────────        ──────────────────────────────
+[dmz-web01] ──(SQLi/CmdInj)──┐
+                             ▼
+[dmz-mail01] ─(Phishing)───▶ [rz-db01] ───(internal_creds table)───▶ [int-dev01] ──(Docker API RCE)
+                             ▲                                           │
+[dmz-ftp01] ──(SSH Keys)─────┘                                           ▼
+                             [rz-vpn01] ──(.ovpn configs)──────────▶ [int-backup01] ──(rsync dump)
+                             ▲                                           │
+                             [rz-monitor01] ─(SNMP walk)─────────────────┘
+                                                                         ▼
+                                                                     [int-dc01] ──(AS-REP / DCSync)
+                                                                         ▼
+                                                            🏆 DOMAIN ADMIN COMPROMISE
+```
+
