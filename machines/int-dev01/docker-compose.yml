@@ -1,0 +1,35 @@
+version: '3.8'
+# VulnCorp — Machine 9: int-dev01
+# DEPLOY: git clone <repo> && cd int-dev01 && sudo ./deploy.sh
+# ACCESS: http://<VM_IP>        (GitLab — root/gitlab_root_pass)
+#         http://<VM_IP>:8080   (Jenkins — no auth)
+#         curl http://<VM_IP>:2375/version  (Docker API — no TLS!)
+# ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+services:
+  int-dev01:
+    build: .
+    container_name: vulncorp-dev01
+    hostname: vulncorp-dev01
+    privileged: true
+    ports:
+      - "0.0.0.0:22:22"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:2222:2222"
+      - "0.0.0.0:2375:2375"
+      - "0.0.0.0:8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - gitlab_config:/etc/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - jenkins_home:/var/jenkins_home
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    environment:
+      - VULNCORP_ENV=lab
+      - MACHINE_IP=192.168.1.30
+
+volumes:
+  gitlab_config:
+  gitlab_data:
+  jenkins_home:

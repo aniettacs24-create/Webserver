@@ -1,0 +1,24 @@
+version: '3.8'
+# VulnCorp — Machine 6: rz-monitor01
+# DEPLOY: git clone <repo> && cd rz-monitor01 && sudo ./deploy.sh
+# ACCESS: http://<VM_IP>/nagios4  (nagiosadmin/nagios)
+#         snmpwalk -v2c -c public <VM_IP>
+# ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+services:
+  rz-monitor01:
+    build: .
+    container_name: vulncorp-monitor01
+    hostname: vulncorp-monitor01
+    ports:
+      - "0.0.0.0:22:22"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:161:161/udp"
+    cap_add:
+      - SYS_PTRACE
+      - NET_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    environment:
+      - VULNCORP_ENV=lab
+      - MACHINE_IP=172.16.0.30

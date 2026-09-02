@@ -1,0 +1,27 @@
+version: '3.8'
+# ================================================================
+# VulnCorp — Machine 3: dmz-ftp01
+# DEPLOY: git clone <repo> && cd dmz-ftp01 && sudo ./deploy.sh
+# ACCESS: ftp <VM_IP> 21 (anonymous login)
+#         ftp <VM_IP> 2121 (ProFTPD mod_copy)
+# ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+# ================================================================
+services:
+  dmz-ftp01:
+    build: .
+    container_name: vulncorp-ftp01
+    hostname: vulncorp-ftp01
+    ports:
+      - "0.0.0.0:21:21"
+      - "0.0.0.0:2121:2121"
+      - "0.0.0.0:22:22"
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:40000-40100:40000-40100"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    environment:
+      - VULNCORP_ENV=lab
+      - MACHINE_IP=10.10.10.30

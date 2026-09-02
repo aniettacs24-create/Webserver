@@ -1,0 +1,37 @@
+version: '3.8'
+
+# ================================================================
+# VulnCorp — Machine 2: dmz-mail01
+# ================================================================
+# DEPLOY:
+#   git clone https://github.com/YOUR_ORG/dmz-mail01 && cd dmz-mail01
+#   sudo ./deploy.sh
+# ================================================================
+# ACCESS:
+#   SMTP: telnet <VM_IP> 25
+#   IMAP: nc <VM_IP> 143
+#   SSH:  ssh admin@<VM_IP> -p 2222  (pw: Admin@2024!)
+# ================================================================
+# ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+# ================================================================
+
+services:
+  dmz-mail01:
+    build: .
+    container_name: vulncorp-mail01
+    hostname: vulncorp-mail01
+    ports:
+      - "0.0.0.0:25:25"         # SMTP (Open Relay)
+      - "0.0.0.0:110:110"       # POP3 (Plaintext)
+      - "0.0.0.0:143:143"       # IMAP (Plaintext)
+      - "0.0.0.0:80:80"         # HTTP (Webmail)
+      - "0.0.0.0:2222:22"       # SSH
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    environment:
+      - VULNCORP_ENV=lab
+      - MACHINE_IP=10.10.10.20
+      - NEXT_MACHINE_IP=172.16.0.10

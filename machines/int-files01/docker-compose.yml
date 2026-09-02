@@ -1,0 +1,25 @@
+version: '3.8'
+# VulnCorp — Machine 10: int-files01
+# DEPLOY: git clone <repo> && cd int-files01 && sudo ./deploy.sh
+# ACCESS: smbclient -L \\<VM_IP> -N   (guest/anon login)
+#         showmount -e <VM_IP>
+# ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+services:
+  int-files01:
+    build: .
+    container_name: vulncorp-files01
+    hostname: VULNCORP-FILES01
+    ports:
+      - "0.0.0.0:22:22"
+      - "0.0.0.0:139:139"
+      - "0.0.0.0:445:445"
+      - "0.0.0.0:2049:2049"
+    cap_add:
+      - SYS_PTRACE
+      - NET_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    environment:
+      - VULNCORP_ENV=lab
+      - MACHINE_IP=192.168.1.40

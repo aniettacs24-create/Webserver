@@ -1,0 +1,24 @@
+version: '3.8'
+# VulnCorp — Machine 4: rz-db01
+# DEPLOY: git clone <repo> && cd rz-db01 && sudo ./deploy.sh
+# ACCESS: mysql -h <VM_IP> -u root -ptoor
+#         redis-cli -h <VM_IP>   (no auth)
+# ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+services:
+  rz-db01:
+    build: .
+    container_name: vulncorp-db01
+    hostname: vulncorp-db01
+    ports:
+      - "0.0.0.0:22:22"
+      - "0.0.0.0:3306:3306"
+      - "0.0.0.0:5432:5432"
+      - "0.0.0.0:6379:6379"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    environment:
+      - VULNCORP_ENV=lab
+      - MACHINE_IP=172.16.0.10
