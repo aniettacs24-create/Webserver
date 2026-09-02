@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     sudo \
     telnet \
     swaks \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Create mail users with weak passwords
@@ -37,8 +38,7 @@ RUN for user in admin sysadmin developer helpdesk; do \
       chown -R $user:$user /home/$user/Maildir; \
     done
 
-# Copy configs and setup scripts
-COPY config/ /etc/vulncorp/config/
+# Copy setup scripts and entrypoint
 COPY setup/   /opt/setup/
 COPY entrypoint.sh /entrypoint.sh
 
