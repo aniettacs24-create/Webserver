@@ -1,7 +1,7 @@
-version: '3.8'
 # VulnCorp — Machine 11: int-backup01
 # DEPLOY: git clone <repo> && cd int-backup01 && sudo ./deploy.sh
 # ACCESS: rsync rsync://<VM_IP>/   (NO AUTH — lists all backup modules)
+#         ssh backupadmin@<VM_IP> -p 2222  (backupadmin/backup123)
 # ⚠️  FOR EDUCATIONAL / LAB USE ONLY
 services:
   int-backup01:
@@ -9,8 +9,8 @@ services:
     container_name: vulncorp-backup01
     hostname: vulncorp-backup01
     ports:
-      - "0.0.0.0:22:22"
-      - "0.0.0.0:873:873"
+      - "0.0.0.0:2222:22"       # SSH (host 2222 → container 22, avoids host :22 conflict)
+      - "0.0.0.0:873:873"       # rsync daemon (no auth!)
     cap_add:
       - SYS_PTRACE
     security_opt:

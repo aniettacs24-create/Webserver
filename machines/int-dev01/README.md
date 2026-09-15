@@ -2,6 +2,8 @@
 
 > ⚠️ **FOR EDUCATIONAL / LAB USE ONLY — NEVER EXPOSE TO THE INTERNET**
 
+> 📝 **IP Note:** All IP addresses below are placeholders. Change `192.168.1.30` and any other IPs to match your lab network layout before deploying.
+
 Machine 9 is a DevOps server in the **Internal Zone (`192.168.1.30`)** running **GitLab CE (CVE-2021-22205)**, **Unsecured Jenkins**, and an **Unauthenticated Docker Daemon API exposed on 0.0.0.0:2375**.
 
 ---
@@ -22,12 +24,12 @@ sudo ./deploy.sh
 
 ## 📡 Exposed Ports & Services
 
-| Service | Port | Description | Vulnerability |
-|---------|------|-------------|---------------|
-| **GitLab CE** | `80` / `2222` | GitLab 14.0.12 | Vulnerable to **CVE-2021-22205** (RCE via ExifTool djvu file), root password `gitlab_root_pass` |
+| Service | Host Port | Description | Vulnerability |
+|---------|-----------|-------------|---------------|
+| **GitLab CE** | `80` | GitLab 14.0.12 | Vulnerable to **CVE-2021-22205** (RCE via ExifTool djvu file), root password `gitlab_root_pass` |
 | **Jenkins** | `8080` | CI/CD Server | **Authentication Disabled** — Script Console allows instant system execution |
 | **Docker Engine API** | `2375` | TCP Socket | **No TLS & No Authentication** — Container escape & root host filesystem mount |
-| **SSH** | `22` | OpenSSH | Standard access |
+| **SSH** | `2222` | OpenSSH | `developer`/`dev123` — avoids conflict with host SSH on port 22 |
 
 ---
 
@@ -53,6 +55,12 @@ println "id".execute().text
 
 ### 3. GitLab Hardcoded Secrets & CVE-2021-22205
 Log into GitLab at `http://192.168.1.30` with `root` : `gitlab_root_pass` to find committed AWS keys, DB passwords, and Active Directory credentials.
+
+### 4. SSH Access
+```bash
+ssh developer@192.168.1.30 -p 2222
+# Password: dev123
+```
 
 ---
 

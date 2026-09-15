@@ -1,0 +1,26 @@
+# VulnCorp — Machine 12: int-ws01 (Windows Workstation Simulation)
+# DEPLOY: git clone <repo> && cd int-ws01 && sudo ./deploy.sh
+# ACCESS: smbclient -L \\<VM_IP> -N   (SMBv1 / guest access)
+#         http://<VM_IP>               (credential dump page)
+#         ssh ws_admin@<VM_IP> -p 2222 (ws_admin/Desktop@2024)
+# ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+services:
+  int-ws01:
+    build: .
+    container_name: vulncorp-ws01
+    hostname: VULNCORP-WS01
+    ports:
+      - "0.0.0.0:2222:22"       # SSH (host 2222 → container 22, avoids host :22 conflict)
+      - "0.0.0.0:80:80"         # HTTP credential dump page
+      - "0.0.0.0:139:139"       # SMB (NetBIOS)
+      - "0.0.0.0:445:445"       # SMB (EternalBlue vector)
+    cap_add:
+      - SYS_PTRACE
+      - NET_ADMIN
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    environment:
+      - VULNCORP_ENV=lab
+      - MACHINE_IP=192.168.1.60
+      - DC_IP=192.168.1.10

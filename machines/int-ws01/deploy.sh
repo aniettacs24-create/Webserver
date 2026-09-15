@@ -1,10 +1,13 @@
 #!/bin/bash
 # ================================================================
-# VulnCorp — Machine 8: int-erp01 One-Command Deploy Script
+# VulnCorp — Machine 12: int-ws01 One-Command Deploy Script
+# ================================================================
+# ⚠️  IP Note: Change MACHINE_IP and DC_IP in docker-compose.yml
+#     to match your lab network layout before running.
 # ================================================================
 set -e
 echo "============================================="
-echo "  Deploying VulnCorp ERP (int-erp01)         "
+echo "  Deploying VulnCorp Workstation (int-ws01)  "
 echo "============================================="
 
 # Ensure curl is available (some fresh Debian VMs lack it)
@@ -24,14 +27,16 @@ if ! docker compose version &> /dev/null; then
     apt-get update && apt-get install -y docker-compose-v2
 fi
 
-echo "[*] Building and starting int-erp01 container..."
+echo "[*] Building and starting int-ws01 container..."
 docker compose up -d --build
 
 echo ""
 echo "============================================="
-echo "  int-erp01 DEPLOYED SUCCESSFULLY!           "
+echo "  int-ws01 DEPLOYED SUCCESSFULLY!            "
 echo "============================================="
-echo "  ERP App (SQLi, IDOR, SSRF): Port 80"
-echo "  PostgreSQL:                 Port 5432"
-echo "  SSH (erpuser/Erp@User2024): Port 2222"
+echo "  SMB (SMBv1 / Guest):            Port 445"
+echo "  HTTP (Credential Dump):         Port 80"
+echo "  SSH (ws_admin/Desktop@2024):    Port 2222"
+echo ""
+echo "  For real Windows VM: use deploy_ws.ps1     "
 echo "============================================="

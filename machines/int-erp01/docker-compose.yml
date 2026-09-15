@@ -1,7 +1,7 @@
-version: '3.8'
 # VulnCorp — Machine 8: int-erp01
 # DEPLOY: git clone <repo> && cd int-erp01 && sudo ./deploy.sh
 # ACCESS: http://<VM_IP>  (admin/admin123 — SQLi, IDOR, SSRF)
+#         ssh erpuser@<VM_IP> -p 2222   (erpuser/Erp@User2024)
 # ⚠️  FOR EDUCATIONAL / LAB USE ONLY
 services:
   int-erp01:
@@ -9,9 +9,9 @@ services:
     container_name: vulncorp-erp01
     hostname: vulncorp-erp01
     ports:
-      - "0.0.0.0:22:22"
-      - "0.0.0.0:80:80"
-      - "0.0.0.0:5432:5432"
+      - "0.0.0.0:2222:22"       # SSH (host 2222 → container 22, avoids host :22 conflict)
+      - "0.0.0.0:80:80"         # ERP Web App
+      - "0.0.0.0:5432:5432"     # PostgreSQL
     cap_add:
       - SYS_PTRACE
     security_opt:

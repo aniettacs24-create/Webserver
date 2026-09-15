@@ -7,6 +7,12 @@ echo "============================================="
 echo "  Deploying VulnCorp DevOps (int-dev01)      "
 echo "============================================="
 
+# Ensure curl is available (some fresh Debian VMs lack it)
+if ! command -v curl &> /dev/null; then
+    echo "[*] Installing curl..."
+    apt-get update -qq && apt-get install -y -qq curl
+fi
+
 if ! command -v docker &> /dev/null; then
     echo "[*] Installing Docker..."
     curl -fsSL https://get.docker.com | sh
@@ -28,5 +34,5 @@ echo "============================================="
 echo "  GitLab (root/gitlab_root_pass): Port 80"
 echo "  Jenkins (No Auth):              Port 8080"
 echo "  Docker API (No TLS):            Port 2375"
-echo "  SSH:                            Port 22"
+echo "  SSH (developer/dev123):         Port 2222"
 echo "============================================="

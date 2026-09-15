@@ -14,7 +14,7 @@ docker run -d \
   --name vulncorp-gitlab \
   --hostname vulncorp-gitlab \
   --restart always \
-  -p 80:80 -p 2222:22 \
+  -p 80:80 \
   -e GITLAB_OMNIBUS_CONFIG="external_url 'http://localhost'; gitlab_rails['initial_root_password'] = 'gitlab_root_pass'" \
   -v gitlab_config:/etc/gitlab \
   -v gitlab_data:/var/opt/gitlab \
@@ -35,6 +35,7 @@ echo ""
 echo "  GitLab:     http://localhost:80  (root/gitlab_root_pass)"
 echo "  Jenkins:    http://localhost:8080 (NO AUTH)"
 echo "  Docker API: curl http://localhost:2375/version  (NO TLS!)"
+echo "  SSH:        Port 22 (inside container, host maps to 2222)"
 echo "  ⚠️  FOR EDUCATIONAL USE ONLY"
 echo "============================================="
 tail -f /dev/null

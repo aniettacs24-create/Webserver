@@ -1,8 +1,8 @@
-version: '3.8'
 # VulnCorp — Machine 10: int-files01
 # DEPLOY: git clone <repo> && cd int-files01 && sudo ./deploy.sh
 # ACCESS: smbclient -L \\<VM_IP> -N   (guest/anon login)
 #         showmount -e <VM_IP>
+#         ssh fileuser@<VM_IP> -p 2222  (fileuser/File@User2024)
 # ⚠️  FOR EDUCATIONAL / LAB USE ONLY
 services:
   int-files01:
@@ -10,10 +10,10 @@ services:
     container_name: vulncorp-files01
     hostname: VULNCORP-FILES01
     ports:
-      - "0.0.0.0:22:22"
-      - "0.0.0.0:139:139"
-      - "0.0.0.0:445:445"
-      - "0.0.0.0:2049:2049"
+      - "0.0.0.0:2222:22"       # SSH (host 2222 → container 22, avoids host :22 conflict)
+      - "0.0.0.0:139:139"       # SMB (NetBIOS)
+      - "0.0.0.0:445:445"       # SMB
+      - "0.0.0.0:2049:2049"     # NFS
     cap_add:
       - SYS_PTRACE
       - NET_ADMIN
