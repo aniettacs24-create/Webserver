@@ -1,0 +1,18 @@
+﻿FROM jenkins/jenkins:2.387.3-lts-jdk17
+
+# Fix: AWT "not configured properly" error
+# The base Jenkins image uses headless JDK. Adding fontconfig and
+# setting java.awt.headless fixes the rendering errors in the UI.
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    fontconfig libfreetype6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Disable setup wizard and security (vulnerability — no auth required)
+ENV JAVA_OPTS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false"
+ENV JENKINS_OPTS="--httpPort=8080"
+
+# Drop the Groovy init script to disable all authentication
+COPY setup/jenkins_disable_security.groovy /usr/share/jenkins/ref/init.groovy.d/disable-security.groovy
+
+USER jenkins

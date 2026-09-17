@@ -1,9 +1,9 @@
 #!/bin/bash
 # ============================================================================
 #  VulnCorp — int-dev01 entrypoint
-#  Starts: SSH | Docker daemon (no TLS) | Jenkins (no auth) | GitLab CE
+#  This container only runs: SSH + Docker API proxy (via socat)
+#  Jenkins and GitLab run as separate docker-compose services.
 # ============================================================================
-set -e
 
 echo "============================================="
 echo "  VulnCorp DevOps Server (int-dev01)         "
@@ -14,86 +14,29 @@ echo "[*] Starting SSH..."
 service ssh start
 echo "[+] SSH is up on :22"
 
-# ── 2. Docker API — TCP on 2375 with NO TLS (vulnerability) ──────────────────
-echo "[*] Exposing Host Docker API on 0.0.0.0:2375 (NO TLS) via socat..."
+# ── 2. Docker API — proxy host socket to TCP 2375 (NO TLS = vulnerability) ───
+echo "[*] Exposing Docker API on 0.0.0.0:2375 (NO TLS) via socat..."
 if [ -S /var/run/docker.sock ]; then
     socat TCP-LISTEN:2375,fork,reuseaddr,bind=0.0.0.0 UNIX-CONNECT:/var/run/docker.sock > /var/log/socat-docker.log 2>&1 &
-    echo "[+] Docker API exposed via socat"
+    sleep 1
+    if nc -z 127.0.0.1 2375 2>/dev/null; then
+        echo "[+] Docker API exposed on :2375"
+    else
+        echo "[!] WARNING: socat started but port 2375 not yet listening"
+    fi
 else
     echo "[!] WARNING: /var/run/docker.sock not found. Docker API won't be exposed."
 fi
 
-# ── 3. Jenkins — no authentication (vulnerability) ────────────────────────────
-echo "[*] Starting Jenkins (no auth) on :8080..."
-export JENKINS_HOME=/var/lib/jenkins
-export JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
-
-# Start Jenkins WAR directly (no init.d script since we installed via WAR)
-sudo -u jenkins \
-    java $JAVA_OPTS \
-    -jar /usr/share/jenkins.war \
-    --httpPort=8080 \
-    --prefix=/ \
-    > /var/log/jenkins/jenkins.log 2>&1 &
-
-# Wait for Jenkins to be ready (up to 90 seconds — it's slow on first boot)
-echo "[*] Waiting for Jenkins to be ready..."
-for i in $(seq 1 90); do
-    if curl -sf http://127.0.0.1:8080 > /dev/null 2>&1; then
-        echo "[+] Jenkins is up on :8080"
-        break
-    fi
-    [ $i -eq 90 ] && echo "[!] WARNING: Jenkins did not become ready in 90s" && break
-    sleep 1
-done
-
-# ── 4. GitLab CE — CVE-2021-22205 (vulnerability) ─────────────────────────────
-echo "[*] Starting GitLab CE (vulnerable to CVE-2021-22205) on :80..."
-# Pre-configure external URL and root password
-cat > /etc/gitlab/gitlab.rb <<'EOF'
-external_url 'http://localhost'
-gitlab_rails['initial_root_password'] = 'gitlab_root_pass'
-gitlab_rails['initial_shared_runners_registration_token'] = 'disabled'
-nginx['listen_port'] = 80
-EOF
-
-# Run gitlab-ctl reconfigure only if first start (flag file doesn't exist)
-if [ ! -f /etc/gitlab/.configured ]; then
-    echo "[*] Running gitlab-ctl reconfigure (first boot — this may take 2-3 mins)..."
-    gitlab-ctl reconfigure > /var/log/gitlab-reconfigure.log 2>&1 && \
-        touch /etc/gitlab/.configured
-else
-    echo "[*] GitLab already configured, starting services..."
-    gitlab-ctl start > /var/log/gitlab-start.log 2>&1
-fi
-
-# Wait for GitLab to be ready (up to 3 minutes)
-echo "[*] Waiting for GitLab to be ready..."
-for i in $(seq 1 180); do
-    if curl -sf http://127.0.0.1:80 > /dev/null 2>&1; then
-        echo "[+] GitLab is up on :80"
-        break
-    fi
-    [ $i -eq 180 ] && echo "[!] WARNING: GitLab did not become ready in 3 mins" && break
-    sleep 1
-done
-
-# ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
 echo "============================================="
-echo "  Services Status:"
-echo "  GitLab:     http://localhost:80  (root/gitlab_root_pass)"
-echo "  Jenkins:    http://localhost:8080 (NO AUTH)"
-echo "  Docker API: curl http://localhost:2375/version  (NO TLS!)"
+echo "  int-dev01 is ready"
 echo "  SSH:        Port 22 (host maps to :2222)"
+echo "  Docker API: Port 2375 (NO TLS!)"
 echo "  ⚠️  FOR EDUCATIONAL USE ONLY"
 echo "============================================="
 
-# Verify all ports are actually listening
-echo "[*] Port check:"
-ss -lntp 2>/dev/null | grep -E ':22|:80|:2375|:8080' || \
-    netstat -lntp 2>/dev/null | grep -E ':22|:80|:2375|:8080' || true
-
 # Keep the container alive
 exec tail -f /dev/null
+
 

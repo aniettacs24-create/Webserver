@@ -27,37 +27,26 @@ if ! docker compose version &> /dev/null; then
     apt-get update && apt-get install -y docker-compose-v2
 fi
 
-echo "[*] Building and starting int-dev01 container..."
+# Clean up any previous deployment
+echo "[*] Stopping any previous containers..."
+docker compose down --remove-orphans 2>/dev/null || true
+
+echo "[*] Building and starting all services..."
+echo "    (3 containers: vulncorp-dev01, vulncorp-gitlab, vulncorp-jenkins)"
 docker compose up -d --build
 
 echo ""
-echo "[*] Waiting for all services to come up inside the container..."
-echo "    (GitLab takes 2-3 minutes on first boot — please be patient)"
+echo "[*] Waiting for all services to come up..."
+echo "    (GitLab takes 3-5 minutes on first boot — please be patient)"
 echo ""
 
-# ── Health check function ─────────────────────────────────────────────────────
-check_port() {
-    local name=$1
-    local host=$2
-    local port=$3
-    local timeout=${4:-120}
-    printf "    %-14s [:%-4s] ... " "$name" "$port"
-    for i in $(seq 1 $timeout); do
-        if curl -sf "http://${host}:${port}" > /dev/null 2>&1 || \
-           nc -z "$host" "$port" 2>/dev/null; then
-            echo "✅  UP"
-            return 0
-        fi
-        sleep 1
-    done
-    echo "❌  NOT responding after ${timeout}s"
-    return 1
-}
+# Disable exit-on-error for health checks (we want to report all statuses)
+set +e
 
-# ── Check SSH (nc) ────────────────────────────────────────────────────────────
+# ── Check SSH ─────────────────────────────────────────────────────────────────
 printf "    %-14s [:%-4s] ... " "SSH" "2222"
 for i in $(seq 1 30); do
-    if nc -z "${VM_IP}" 2222 2>/dev/null; then
+    if nc -z 127.0.0.1 2222 2>/dev/null; then
         echo "✅  UP"
         break
     fi
@@ -68,7 +57,7 @@ done
 # ── Check Docker API ──────────────────────────────────────────────────────────
 printf "    %-14s [:%-4s] ... " "Docker API" "2375"
 for i in $(seq 1 30); do
-    if curl -sf "http://${VM_IP}:2375/version" > /dev/null 2>&1; then
+    if curl -sf "http://127.0.0.1:2375/version" > /dev/null 2>&1; then
         echo "✅  UP"
         break
     fi
@@ -77,14 +66,32 @@ for i in $(seq 1 30); do
 done
 
 # ── Check Jenkins ─────────────────────────────────────────────────────────────
-check_port "Jenkins" "${VM_IP}" "8080" 120
+printf "    %-14s [:%-4s] ... " "Jenkins" "8080"
+for i in $(seq 1 120); do
+    if curl -sf "http://127.0.0.1:8080" > /dev/null 2>&1; then
+        echo "✅  UP"
+        break
+    fi
+    [ $i -eq 120 ] && echo "❌  NOT responding after 120s"
+    sleep 1
+done
 
 # ── Check GitLab ──────────────────────────────────────────────────────────────
-check_port "GitLab" "${VM_IP}" "80" 240
+printf "    %-14s [:%-4s] ... " "GitLab" "80"
+for i in $(seq 1 300); do
+    if curl -sf "http://127.0.0.1:80" > /dev/null 2>&1; then
+        echo "✅  UP"
+        break
+    fi
+    [ $i -eq 300 ] && echo "❌  NOT responding after 5 mins (may still be starting)"
+    sleep 1
+done
+
+set -e
 
 echo ""
 echo "============================================="
-echo "  int-dev01 DEPLOYED SUCCESSFULLY!           "
+echo "  int-dev01 DEPLOYED!                        "
 echo "============================================="
 echo "  GitLab (root/gitlab_root_pass): http://${VM_IP}:80"
 echo "  Jenkins (No Auth):              http://${VM_IP}:8080"
@@ -92,9 +99,10 @@ echo "  Docker API (No TLS):            curl http://${VM_IP}:2375/version"
 echo "  SSH (developer/dev123):         ssh developer@${VM_IP} -p 2222"
 echo "============================================="
 echo ""
-echo "  📋 Debug logs (if anything failed):"
-echo "     sudo docker exec -it vulncorp-dev01 cat /var/log/dockerd.log"
-echo "     sudo docker exec -it vulncorp-dev01 cat /var/log/gitlab-reconfigure.log"
-echo "     sudo docker exec -it vulncorp-dev01 journalctl -u jenkins"
+echo "  📋 Debug (if anything failed):"
+echo "     docker logs vulncorp-dev01"
+echo "     docker logs vulncorp-gitlab"
+echo "     docker logs vulncorp-jenkins"
 echo "============================================="
+
 

@@ -5,31 +5,73 @@
 #         curl http://<VM_IP>:2375/version  (Docker API — no TLS!)
 #         ssh developer@<VM_IP> -p 2222     (developer/dev123)
 # ⚠️  FOR EDUCATIONAL / LAB USE ONLY
+
+networks:
+  vulncorp-dev:
+    driver: bridge
+
 services:
+
+  # ── Main DevOps container: SSH + Docker API exposure ────────────────────────
   int-dev01:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: vulncorp-dev01
     hostname: vulncorp-dev01
     privileged: true
     ports:
-      - "0.0.0.0:2222:22"       # SSH (host 2222 → container 22, avoids host :22 conflict)
-      - "0.0.0.0:80:80"         # GitLab HTTP
-      - "0.0.0.0:2375:2375"     # Docker API (no TLS!)
-      - "0.0.0.0:8080:8080"     # Jenkins
+      - "0.0.0.0:2222:22"       # SSH (developer/dev123)
+      - "0.0.0.0:2375:2375"     # Docker API — NO TLS (vulnerability)
     volumes:
-      # Mount host Docker socket so the exposed API also controls the host daemon
       - /var/run/docker.sock:/var/run/docker.sock
     security_opt:
       - seccomp:unconfined
     restart: unless-stopped
+    networks:
+      - vulncorp-dev
     environment:
       - VULNCORP_ENV=lab
-      - MACHINE_IP=192.168.1.30
-    # Healthcheck: verifies that SSH is up (fastest indicator that entrypoint ran)
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "22"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
 
+  # ── GitLab CE 14.0.12 — CVE-2021-22205 (RCE via ExifTool) ──────────────────
+  vulncorp-gitlab:
+    image: gitlab/gitlab-ce:14.0.12-ce.0
+    container_name: vulncorp-gitlab
+    hostname: vulncorp-gitlab
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:80:80"         # GitLab HTTP
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost'
+        gitlab_rails['initial_root_password'] = 'gitlab_root_pass'
+        gitlab_rails['initial_shared_runners_registration_token'] = 'disabled'
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - gitlab_logs:/var/log/gitlab
+    networks:
+      - vulncorp-dev
+
+  # ── Jenkins — Authentication Disabled (Script Console = instant RCE) ────────
+  vulncorp-jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: vulncorp-jenkins
+    hostname: vulncorp-jenkins
+    restart: unless-stopped
+    ports:
+      - "0.0.0.0:8080:8080"     # Jenkins (no auth)
+    volumes:
+      - jenkins_home:/var/jenkins_home
+    networks:
+      - vulncorp-dev
+
+volumes:
+  gitlab_config:
+  gitlab_data:
+  gitlab_logs:
+  jenkins_home:
