@@ -14,31 +14,14 @@ echo "[*] Starting SSH..."
 service ssh start
 echo "[+] SSH is up on :22"
 
-# ── 2. Docker daemon — TCP on 2375 with NO TLS (vulnerability) ───────────────
-echo "[*] Starting Docker daemon (API exposed on 0.0.0.0:2375 — NO TLS)..."
-# Write daemon config to expose TCP without TLS
-mkdir -p /etc/docker
-cat > /etc/docker/daemon.json <<'EOF'
-{
-  "hosts": ["fd://", "tcp://0.0.0.0:2375"],
-  "tls": false
-}
-EOF
-
-# Start dockerd in background; redirect its output to a log file
-dockerd --config-file /etc/docker/daemon.json > /var/log/dockerd.log 2>&1 &
-DOCKERD_PID=$!
-
-# Wait for dockerd to be ready (up to 30 seconds)
-echo "[*] Waiting for Docker daemon to be ready..."
-for i in $(seq 1 30); do
-    if docker -H tcp://127.0.0.1:2375 info > /dev/null 2>&1; then
-        echo "[+] Docker daemon ready (PID ${DOCKERD_PID}), API on :2375"
-        break
-    fi
-    [ $i -eq 30 ] && echo "[!] WARNING: dockerd did not become ready in 30s" && break
-    sleep 1
-done
+# ── 2. Docker API — TCP on 2375 with NO TLS (vulnerability) ──────────────────
+echo "[*] Exposing Host Docker API on 0.0.0.0:2375 (NO TLS) via socat..."
+if [ -S /var/run/docker.sock ]; then
+    socat TCP-LISTEN:2375,fork,reuseaddr,bind=0.0.0.0 UNIX-CONNECT:/var/run/docker.sock > /var/log/socat-docker.log 2>&1 &
+    echo "[+] Docker API exposed via socat"
+else
+    echo "[!] WARNING: /var/run/docker.sock not found. Docker API won't be exposed."
+fi
 
 # ── 3. Jenkins — no authentication (vulnerability) ────────────────────────────
 echo "[*] Starting Jenkins (no auth) on :8080..."

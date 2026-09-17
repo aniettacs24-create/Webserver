@@ -10,8 +10,19 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-server \
     curl wget gnupg ca-certificates lsb-release \
-    net-tools netcat-openbsd iproute2 procps vim sudo git \
+    net-tools netcat-openbsd iproute2 procps vim sudo git socat \
     openjdk-17-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── GitLab CE (vulnerable version — CVE-2021-22205) ─────────────────────────
+# Pinned to 14.0.12 for the CVE.
+RUN curl -fsSL https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey \
+      | gpg --dearmor -o /usr/share/keyrings/gitlab-keyring.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/gitlab-keyring.gpg] \
+      https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu/ jammy main" \
+      > /etc/apt/sources.list.d/gitlab-ce.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends gitlab-ce=14.0.12-ce.0 \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Jenkins WAR (direct download — distro-agnostic, no apt repo needed) ─────
