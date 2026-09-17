@@ -15,11 +15,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ── GitLab CE (vulnerable version — CVE-2021-22205) ─────────────────────────
-# Pinned to 14.0.12 for the CVE.
+# Pinned to 14.0.12 for the CVE. We use the 'focal' (20.04) repo because 
+# this old version was never built for jammy/noble.
 RUN curl -fsSL https://packages.gitlab.com/gitlab/gitlab-ce/gpgkey \
       | gpg --dearmor -o /usr/share/keyrings/gitlab-keyring.gpg \
     && echo "deb [signed-by=/usr/share/keyrings/gitlab-keyring.gpg] \
-      https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu/ jammy main" \
+      https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu/ focal main" \
       > /etc/apt/sources.list.d/gitlab-ce.list \
     && apt-get update \
     && apt-get install -y --no-install-recommends gitlab-ce=14.0.12-ce.0 \
