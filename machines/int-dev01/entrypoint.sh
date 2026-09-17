@@ -42,14 +42,16 @@ done
 
 # ── 3. Jenkins — no authentication (vulnerability) ────────────────────────────
 echo "[*] Starting Jenkins (no auth) on :8080..."
-# Jenkins runs as the 'jenkins' user; we use start-stop-daemon so it stays
-# attached to the process group properly inside Docker.
 export JENKINS_HOME=/var/lib/jenkins
 export JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
-export JENKINS_PORT=8080
 
-# Start Jenkins service (installed via apt, has an init.d script)
-service jenkins start
+# Start Jenkins WAR directly (no init.d script since we installed via WAR)
+sudo -u jenkins \
+    java $JAVA_OPTS \
+    -jar /usr/share/jenkins.war \
+    --httpPort=8080 \
+    --prefix=/ \
+    > /var/log/jenkins/jenkins.log 2>&1 &
 
 # Wait for Jenkins to be ready (up to 90 seconds — it's slow on first boot)
 echo "[*] Waiting for Jenkins to be ready..."

@@ -11,21 +11,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-server \
     curl wget gnupg ca-certificates lsb-release \
     net-tools netcat-openbsd iproute2 procps vim sudo git \
-    && rm -rf /var/lib/apt/lists/*
-
-# ── Java (required for Jenkins) ───────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
-# ── Jenkins (native — pinned version, auth disabled = vulnerability) ──────────
-RUN curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key \
-      | gpg --dearmor -o /usr/share/keyrings/jenkins-keyring.gpg \
-    && echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] \
-      https://pkg.jenkins.io/debian-stable binary/" \
-      > /etc/apt/sources.list.d/jenkins.list \
-    && apt-get update && apt-get install -y --no-install-recommends jenkins \
-    && rm -rf /var/lib/apt/lists/*
+# ── Jenkins WAR (direct download — distro-agnostic, no apt repo needed) ─────
+# Pin to 2.387.3 LTS — works with Java 17, auth disabled = vulnerability
+ENV JENKINS_VERSION=2.387.3
+ENV JENKINS_HOME=/var/lib/jenkins
+RUN groupadd -r jenkins && useradd -r -g jenkins -d /var/lib/jenkins -s /bin/bash jenkins \
+    && mkdir -p /var/lib/jenkins /var/log/jenkins /var/cache/jenkins \
+    && curl -fsSL \
+       "https://github.com/jenkinsci/jenkins/releases/download/jenkins-${JENKINS_VERSION}/jenkins.war" \
+       -o /usr/share/jenkins.war \
+    && chown -R jenkins:jenkins /var/lib/jenkins /var/log/jenkins /var/cache/jenkins
 
 # ── Docker CE (for the exposed unauthenticated Docker API vulnerability) ──────
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
@@ -51,9 +49,10 @@ RUN /opt/setup/setup_dev.sh
 # ── Jenkins: disable setup wizard and authentication (vulnerability) ───────────
 RUN mkdir -p /var/lib/jenkins/init.groovy.d
 COPY setup/jenkins_disable_security.groovy /var/lib/jenkins/init.groovy.d/disable-security.groovy
-RUN chown -R jenkins:jenkins /var/lib/jenkins 2>/dev/null || true
+RUN chown -R jenkins:jenkins /var/lib/jenkins
 
 # ── Jenkins: JAVA_OPTS to skip setup wizard ───────────────────────────────────
+ENV JENKINS_OPTS="--httpPort=8080"
 ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
 
 EXPOSE 22 80 2375 8080
