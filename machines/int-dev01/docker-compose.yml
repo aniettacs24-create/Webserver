@@ -17,18 +17,19 @@ services:
       - "0.0.0.0:2375:2375"     # Docker API (no TLS!)
       - "0.0.0.0:8080:8080"     # Jenkins
     volumes:
+      # Mount host Docker socket so the exposed API also controls the host daemon
       - /var/run/docker.sock:/var/run/docker.sock
-      - gitlab_config:/etc/gitlab
-      - gitlab_data:/var/opt/gitlab
-      - jenkins_home:/var/jenkins_home
     security_opt:
       - seccomp:unconfined
     restart: unless-stopped
     environment:
       - VULNCORP_ENV=lab
       - MACHINE_IP=192.168.1.30
+    # Healthcheck: verifies that SSH is up (fastest indicator that entrypoint ran)
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "22"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
-volumes:
-  gitlab_config:
-  gitlab_data:
-  jenkins_home:
