@@ -1,11 +1,11 @@
-﻿FROM jenkins/jenkins:2.387.3-lts-jdk17
+FROM jenkins/jenkins:2.387.3-lts-jdk17
 
 # Fix: AWT "not configured properly" error
 # The base Jenkins image uses headless JDK. Adding fontconfig and
 # setting java.awt.headless fixes the rendering errors in the UI.
 USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    fontconfig libfreetype6 \
+    fontconfig \
     && rm -rf /var/lib/apt/lists/*
 
 # Disable setup wizard and security (vulnerability — no auth required)
