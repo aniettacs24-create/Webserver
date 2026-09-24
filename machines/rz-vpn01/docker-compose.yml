@@ -1,4 +1,3 @@
-version: '3.8'
 # VulnCorp — Machine 5: rz-vpn01
 # DEPLOY: git clone <repo> && cd rz-vpn01 && sudo ./deploy.sh
 # ACCESS: http://<VM_IP>:8443  (admin/admin — default creds)
