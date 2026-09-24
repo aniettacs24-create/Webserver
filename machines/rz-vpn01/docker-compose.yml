@@ -8,7 +8,7 @@ services:
     container_name: vulncorp-vpn01
     hostname: vulncorp-vpn01
     ports:
-      - "0.0.0.0:22:22"
+      - "0.0.0.0:2222:22"
       - "0.0.0.0:8443:8443"
     cap_add:
       - SYS_PTRACE
