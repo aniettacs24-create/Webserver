@@ -25,15 +25,22 @@ if ($currentDomain -ne $DomainName) {
     $adapter = Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1
     Set-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -ServerAddresses $DCIP
 
-    Write-Host "[*] Joining domain $DomainName..." -ForegroundColor Yellow
-    $secPass = ConvertTo-SecureString $DomainPassword -AsPlainText -Force
-    $cred = New-Object System.Management.Automation.PSCredential($DomainAdmin, $secPass)
-
-    Add-Computer -DomainName $DomainName -Credential $cred -OUPath "OU=VulnCorp Users,DC=vulncorp,DC=local" -Force
-
-    Write-Host "[!] Rebooting to complete domain join. Re-run this script after reboot." -ForegroundColor Green
-    Restart-Computer -Force
-    Exit
+    try {
+        Write-Host "[*] Joining domain $DomainName..." -ForegroundColor Yellow
+        $secPass = ConvertTo-SecureString $DomainPassword -AsPlainText -Force
+        $cred = New-Object System.Management.Automation.PSCredential($DomainAdmin, $secPass)
+    
+        Add-Computer -DomainName $DomainName -Credential $cred -OUPath "OU=VulnCorp Users,DC=vulncorp,DC=local" -Force -ErrorAction Stop
+    
+        Write-Host "[!] Rebooting to complete domain join. Re-run this script after reboot." -ForegroundColor Green
+        Restart-Computer -Force
+        Exit
+    } catch {
+        Write-Host "[-] Failed to join domain. Error: $_" -ForegroundColor Red
+        Write-Host "Press any key to exit without restarting..." -ForegroundColor Yellow
+        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+        Exit
+    }
 }
 
 Write-Host "[+] Already joined to domain: $currentDomain" -ForegroundColor Green
