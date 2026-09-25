@@ -18,6 +18,41 @@ Write-Host "=============================================" -ForegroundColor Cyan
 Write-Host "  VulnCorp Workstation (int-ws01) Deploy     " -ForegroundColor Cyan
 Write-Host "=============================================" -ForegroundColor Cyan
 
+# ── Step 0: Pre-flight Checks ────────────────────────────────────
+Write-Host "[*] Performing pre-flight checks..." -ForegroundColor Yellow
+
+# 1. Administrator Check
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "[-] Error: This script must be run as Administrator. Please open an elevated PowerShell prompt." -ForegroundColor Red
+    Exit
+}
+
+# 2. Windows Edition Check
+$edition = (Get-ComputerInfo).WindowsProductName
+if ($edition -match "Home") {
+    Write-Host "[-] Error: Windows Home edition detected ($edition)." -ForegroundColor Red
+    Write-Host "[-] Windows Home cannot join an Active Directory domain. Please use Windows 10/11 Pro or Enterprise." -ForegroundColor Red
+    Exit
+}
+
+# 3. Connectivity & DNS Check
+Write-Host "[*] Checking connectivity to Domain Controller ($DCIP)..." -ForegroundColor Yellow
+if (-not (Test-Connection -ComputerName $DCIP -Count 1 -Quiet)) {
+    Write-Host "[-] Error: Cannot reach Domain Controller at $DCIP. Check network connectivity." -ForegroundColor Red
+    Exit
+}
+
+Write-Host "[*] Checking DNS resolution for $DomainName..." -ForegroundColor Yellow
+try {
+    $dns = Resolve-DnsName -Name $DomainName -Server $DCIP -ErrorAction Stop
+    if (-not $dns) { throw "No records returned" }
+} catch {
+    Write-Host "[-] Error: Cannot resolve $DomainName using DNS server $DCIP. Check AD DNS configuration." -ForegroundColor Red
+    Exit
+}
+
+Write-Host "[+] Pre-flight checks passed." -ForegroundColor Green
+
 # ── Step 1: Join Domain (if not already joined) ──────────────────
 $currentDomain = (Get-WmiObject Win32_ComputerSystem).Domain
 if ($currentDomain -ne $DomainName) {
